@@ -1,8 +1,8 @@
 import type { Article, Story, BiasRating, Category } from '@/types';
 import { NEWS_SOURCES, BIAS_ORDER } from '@/data/sources';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 interface FeedResponse {
   feeds: {
@@ -54,8 +54,13 @@ export async function fetchAllFeeds(category?: Category, language?: string, subC
   const data: FeedResponse = await response.json();
 
   const articles: Article[] = [];
+  const seenLinks = new Set<string>();
+
   for (const feed of data.feeds) {
     for (const item of feed.items) {
+      if (!item.link || seenLinks.has(item.link)) continue;
+      seenLinks.add(item.link);
+
       articles.push({
         id: `${feed.sourceName}-${item.link}`.slice(0, 100),
         title: item.title,
@@ -98,6 +103,7 @@ export async function fetchFeedsStreamed(
   }
 
   const allArticles: Article[] = [];
+  const seenLinks = new Set<string>();
 
   for (let i = 0; i < batches.length; i++) {
     const batch = batches[i];
@@ -122,6 +128,9 @@ export async function fetchFeedsStreamed(
         const data: FeedResponse = await response.json();
         for (const feed of data.feeds) {
           for (const item of feed.items) {
+            if (!item.link || seenLinks.has(item.link)) continue;
+            seenLinks.add(item.link);
+
             allArticles.push({
               id: `${feed.sourceName}-${item.link}`.slice(0, 100),
               title: item.title,
@@ -235,7 +244,7 @@ export function groupArticlesIntoStories(articles: Article[]): Story[] {
     }, 0);
 
     stories.push({
-      id: group[0].id,
+      id: `${group[0].id}-story-${stories.length}`,
       title: group[0].title,
       articles: group.sort(
         (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()

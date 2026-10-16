@@ -154,16 +154,7 @@ export function ArxivView({ onOpenPdfReader }: { onOpenPdfReader: (paper: ArxivP
     }
   };
 
-  const categoryColors: Record<string, string> = {
-    'AI & ML': 'bg-brutal-cyan',
-    'Computer Science': 'bg-brutal-blue',
-    'Physics': 'bg-brutal-lime',
-    'Math': 'bg-brutal-yellow',
-    'Biology': 'bg-brutal-orange',
-    'Statistics': 'bg-brutal-pink',
-    'Economics': 'bg-brutal-red',
-    'All': 'bg-brutal-gray',
-  };
+
 
   return (
     <div className="flex flex-col gap-4">
@@ -242,10 +233,10 @@ export function ArxivView({ onOpenPdfReader }: { onOpenPdfReader: (paper: ArxivP
                 Showing {papers.length} papers {activeSearch && `for "${activeSearch}"`}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {papers.map((paper) => {
+                {papers.map((paper, idx) => {
                   const isExpanded = expandedPaper === paper.id;
                   return (
-                    <div key={paper.id} className="brutal-card bg-brutal-white p-4 flex flex-col gap-2">
+                    <div key={`${paper.id}-${idx}`} className="brutal-card bg-brutal-white p-4 flex flex-col gap-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="brutal-tag bg-brutal-cyan text-[10px]">

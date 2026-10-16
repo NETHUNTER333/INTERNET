@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, Loader2, FileText, AlertTriangle, Flame, Fish, Download, Share2 } from 'lucide-react';
+import { ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, Loader2, FileText, Flame, Fish, Download, Share2 } from 'lucide-react';
 import type { Article, Story } from '@/types';
-import { BiasTag } from '@/components/BiasTag';
-import { CoverageBar } from '@/components/CoverageBar';
-import { CATEGORY_COLORS, CATEGORY_LABELS, BIAS_LABELS } from '@/data/sources';
+import { CATEGORY_COLORS, CATEGORY_LABELS } from '@/data/sources';
 import { formatTimeAgo } from '@/lib/news';
 import { deepReadScrape, deepReadSearch } from '@/lib/firecrawl';
 import type { DeepReadProvider } from '@/hooks/useSettings';
 
 interface ArticleViewProps {
   article: Article;
-  story?: Story | null;
+  story: Story | null;
   onBack: () => void;
   onOpenArticle: (article: Article) => void;
   isBookmarked: boolean;
@@ -18,7 +16,7 @@ interface ArticleViewProps {
   firecrawlApiKey: string;
   tinyfishApiKey: string;
   activeProvider: DeepReadProvider;
-  showBias: boolean;
+  showBias?: boolean;
 }
 
 export function ArticleView({
@@ -31,7 +29,6 @@ export function ArticleView({
   firecrawlApiKey,
   tinyfishApiKey,
   activeProvider,
-  showBias,
 }: ArticleViewProps) {
   const [deepContent, setDeepContent] = useState<string | null>(null);
   const [loadingDeep, setLoadingDeep] = useState(false);
@@ -39,14 +36,14 @@ export function ArticleView({
   const [relatedResults, setRelatedResults] = useState<{ title: string; url: string; description: string }[]>([]);
   const [loadingRelated, setLoadingRelated] = useState(false);
 
-  const activeKey = activeProvider === 'tinyfish' ? tinyfishApiKey : firecrawlApiKey;
-  const providerName = activeProvider === 'tinyfish' ? 'TinyFish' : 'Firecrawl';
-
   useEffect(() => {
     setDeepContent(null);
     setDeepError(null);
     setRelatedResults([]);
-  }, [article.link]);
+  }, [article.id]);
+
+  const activeKey = activeProvider === 'tinyfish' ? tinyfishApiKey : firecrawlApiKey;
+  const providerName = activeProvider === 'tinyfish' ? 'TinyFish' : 'Firecrawl';
 
   const handleDeepRead = async () => {
     if (!activeKey) {
@@ -117,7 +114,6 @@ export function ArticleView({
             {CATEGORY_LABELS[article.category]}
           </span>
           <span className="font-bold text-sm">{article.sourceName}</span>
-          {showBias && <BiasTag bias={article.sourceBias} size="md" />}
           <span className="text-xs font-mono text-brutal-black/60 ml-auto">{formatTimeAgo(article.publishedAt)}</span>
         </div>
 
@@ -134,89 +130,115 @@ export function ArticleView({
           />
         )}
 
-        {article.summary && (
-          <p className="text-base font-mono leading-relaxed text-brutal-black/80">{article.summary}</p>
-        )}
-
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap pt-2 border-t-2 border-brutal-black/20">
           <a
             href={article.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="brutal-btn bg-brutal-yellow text-sm flex items-center gap-2"
+            className="brutal-btn bg-brutal-yellow flex items-center gap-2 text-sm"
           >
-            <ExternalLink className="w-4 h-4" /> Read at Source
+            <ExternalLink className="w-4 h-4" /> Read on {article.sourceName}
           </a>
+
           <button
             onClick={() => onToggleBookmark(article)}
-            className="brutal-btn bg-brutal-white text-sm flex items-center gap-2"
+            className="brutal-btn bg-brutal-white flex items-center gap-2 text-sm"
           >
-            {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
-            {isBookmarked ? 'Saved' : 'Save'}
+            {isBookmarked ? (
+              <>
+                <BookmarkCheck className="w-4 h-4 text-brutal-black fill-brutal-black" /> Saved
+              </>
+            ) : (
+              <>
+                <Bookmark className="w-4 h-4" /> Save
+              </>
+            )}
           </button>
+
+          <button
+            onClick={handleDownloadPDF}
+            className="brutal-btn bg-brutal-white flex items-center gap-2 text-sm"
+            title="Download article text"
+          >
+            <Download className="w-4 h-4" /> Export
+          </button>
+
+          <button
+            onClick={handleShare}
+            className="brutal-btn bg-brutal-white flex items-center gap-2 text-sm"
+            title="Share article link"
+          >
+            <Share2 className="w-4 h-4" /> Share
+          </button>
+
           <button
             onClick={handleDeepRead}
             disabled={loadingDeep}
-            className="brutal-btn bg-brutal-cyan text-sm flex items-center gap-2"
+            className={`brutal-btn flex items-center gap-2 text-sm ml-auto ${activeProvider === 'tinyfish' ? 'bg-brutal-lime' : 'bg-brutal-orange text-brutal-white'}`}
           >
-            {loadingDeep ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-            Deep Read {activeProvider === 'tinyfish' && <Fish className="w-3 h-3" />}
-            {activeProvider === 'firecrawl' && <Flame className="w-3 h-3" />}
+            {loadingDeep ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : activeProvider === 'tinyfish' ? (
+              <Fish className="w-4 h-4" />
+            ) : (
+              <Flame className="w-4 h-4" />
+            )}
+            Deep Read ({providerName})
           </button>
+
           <button
             onClick={handleFindRelated}
             disabled={loadingRelated}
-            className="brutal-btn text-sm flex items-center gap-2"
+            className="brutal-btn bg-brutal-blue text-brutal-white flex items-center gap-2 text-sm"
           >
-            {loadingRelated ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
+            {loadingRelated ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
             Find Related
-          </button>
-          <button
-            onClick={handleDownloadPDF}
-            className="brutal-btn text-sm flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" /> PDF
-          </button>
-          <button
-            onClick={handleShare}
-            className="brutal-btn text-sm flex items-center gap-2"
-          >
-            <Share2 className="w-4 h-4" /> Share
           </button>
         </div>
 
         {deepError && (
           <div className="brutal-card bg-brutal-red p-3 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-brutal-white" />
             <p className="text-sm text-brutal-white font-mono">{deepError}</p>
           </div>
         )}
 
-        {deepContent && (
-          <div className="border-3 border-brutal-black bg-brutal-cream p-4 max-h-96 overflow-y-auto">
-            <h3 className="font-display text-lg mb-2 border-b-2 border-brutal-black pb-1">Full Article Content</h3>
-            <div className="prose-sm font-mono text-sm whitespace-pre-wrap leading-relaxed">
-              {deepContent.slice(0, 5000)}
-              {deepContent.length > 5000 && (
-                <p className="mt-2 text-brutal-black/60 italic">
-                  ... ({deepContent.length - 5000} more characters)
-                </p>
-              )}
+        {deepContent ? (
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t-2 border-brutal-black/20">
+            <span className="text-xs font-bold uppercase text-brutal-blue">
+              Full Article Content ({providerName})
+            </span>
+            <div className="prose max-w-none font-mono text-sm leading-relaxed whitespace-pre-wrap bg-brutal-yellow/10 p-4 border-2 border-brutal-black">
+              {deepContent}
             </div>
           </div>
+        ) : (
+          article.summary && (
+            <div className="flex flex-col gap-2 mt-2">
+              <span className="text-xs font-bold uppercase text-brutal-black/60">Summary</span>
+              <p className="font-mono text-base leading-relaxed text-brutal-black/90">
+                {article.summary}
+              </p>
+            </div>
+          )
         )}
 
         {relatedResults.length > 0 && (
-          <div className="border-3 border-brutal-black bg-brutal-lime/20 p-4">
-            <h3 className="font-display text-lg mb-2 border-b-2 border-brutal-black pb-1">Related Coverage</h3>
+          <div className="flex flex-col gap-2 mt-4 pt-4 border-t-2 border-brutal-black/20">
+            <span className="text-xs font-bold uppercase text-brutal-blue">
+              Related Coverage Found via {providerName}
+            </span>
             <div className="flex flex-col gap-2">
-              {relatedResults.map((r) => (
+              {relatedResults.map((r, i) => (
                 <a
-                  key={r.url}
+                  key={i}
                   href={r.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border-2 border-brutal-black bg-brutal-white p-2 hover:bg-brutal-yellow/30 transition-all block"
+                  className="border-2 border-brutal-black bg-brutal-yellow/10 p-3 hover:bg-brutal-yellow/30 transition-all flex flex-col gap-1"
                 >
                   <p className="font-bold text-sm">{r.title}</p>
                   {r.description && <p className="text-xs font-mono text-brutal-black/60 mt-1 line-clamp-2">{r.description}</p>}
@@ -230,12 +252,6 @@ export function ArticleView({
       {story && story.articles.length > 1 && (
         <div className="brutal-card bg-brutal-pink/20 p-4 flex flex-col gap-3">
           <h3 className="font-display text-lg">Coverage from Other Sources</h3>
-          {showBias && (
-            <div>
-              <span className="text-xs font-bold uppercase mb-1 block">Bias Distribution</span>
-              <CoverageBar coverage={story.coverage} totalSources={story.totalSources} showLabels />
-            </div>
-          )}
           <div className="flex flex-col gap-2">
             {story.articles
               .filter((a) => a.id !== article.id)
@@ -249,26 +265,12 @@ export function ArticleView({
                     <span className="text-sm font-bold truncate">{a.title}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono">{a.sourceName}</span>
-                      {showBias && <BiasTag bias={a.sourceBias} />}
                       <span className="text-xs font-mono text-brutal-black/50">{formatTimeAgo(a.publishedAt)}</span>
                     </div>
                   </div>
                   <ExternalLink className="w-4 h-4 text-brutal-black/40 shrink-0" />
                 </div>
               ))}
-          </div>
-        </div>
-      )}
-
-      {story && story.isBlindSpot && (
-        <div className="brutal-card bg-brutal-red p-4 flex items-center gap-3">
-          <AlertTriangle className="w-6 h-6 text-brutal-white" />
-          <div>
-            <p className="font-bold text-brutal-white">Blind Spot Detected</p>
-            <p className="text-sm text-brutal-white/90">
-              This story is only covered by {story.blindSpotSide === 'right' ? 'left-leaning' : 'right-leaning'} sources.
-              The {story.blindSpotSide === 'right' ? 'right' : 'left'} may be missing this story.
-            </p>
           </div>
         </div>
       )}

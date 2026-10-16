@@ -7,7 +7,7 @@ interface SettingsRecord {
   tinyfish_api_key: string | null;
   active_provider: string | null;
   preferred_categories: string[] | null;
-  show_bias_ratings: boolean;
+  theme?: 'light' | 'dark';
 }
 
 export type DeepReadProvider = 'tinyfish' | 'firecrawl';
@@ -17,7 +17,7 @@ export interface AppSettings {
   tinyfishApiKey: string;
   activeProvider: DeepReadProvider;
   preferredCategories: string[];
-  showBiasRatings: boolean;
+  theme: 'light' | 'dark';
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -25,34 +25,52 @@ const DEFAULT_SETTINGS: AppSettings = {
   tinyfishApiKey: '',
   activeProvider: 'tinyfish',
   preferredCategories: [],
-  showBiasRatings: true,
+  theme: 'light', // Default to bright, crisp high-contrast light mode
 };
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
-  const loadSettings = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('settings')
-      .select('*')
-      .eq('id', 1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Failed to load settings:', error);
-      setSettings(DEFAULT_SETTINGS);
-    } else if (data) {
-      const record = data as SettingsRecord;
-      setSettings({
-        firecrawlApiKey: record.firecrawl_api_key || '',
-        tinyfishApiKey: record.tinyfish_api_key || '',
-        activeProvider: (record.active_provider as DeepReadProvider) || 'tinyfish',
-        preferredCategories: record.preferred_categories || [],
-        showBiasRatings: record.show_bias_ratings,
-      });
+  const applyTheme = (themeMode: 'light' | 'dark') => {
+    if (typeof document !== 'undefined') {
+      if (themeMode === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
     }
-    setLoading(false);
+  };
+
+  const loadSettings = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (error || !data) {
+        setSettings(DEFAULT_SETTINGS);
+        applyTheme(DEFAULT_SETTINGS.theme);
+      } else {
+        const record = data as SettingsRecord;
+        const loadedTheme = record.theme || 'light';
+        setSettings({
+          firecrawlApiKey: record.firecrawl_api_key || '',
+          tinyfishApiKey: record.tinyfish_api_key || '',
+          activeProvider: (record.active_provider as DeepReadProvider) || 'tinyfish',
+          preferredCategories: record.preferred_categories || [],
+          theme: loadedTheme,
+        });
+        applyTheme(loadedTheme);
+      }
+    } catch {
+      setSettings(DEFAULT_SETTINGS);
+      applyTheme(DEFAULT_SETTINGS.theme);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -64,23 +82,26 @@ export function useSettings() {
       const newSettings = { ...settings, ...updates };
       setSettings(newSettings);
 
-      const { error } = await supabase
-        .from('settings')
-        .upsert({
-          id: 1,
-          firecrawl_api_key: newSettings.firecrawlApiKey || null,
-          tinyfish_api_key: newSettings.tinyfishApiKey || null,
-          active_provider: newSettings.activeProvider,
-          preferred_categories: newSettings.preferredCategories.length > 0 ? newSettings.preferredCategories : null,
-          show_bias_ratings: newSettings.showBiasRatings,
-          updated_at: new Date().toISOString(),
-        });
+      if (updates.theme) {
+        applyTheme(updates.theme);
+      }
 
-      if (error) {
-        console.error('Failed to save settings:', error);
+      try {
+        await supabase
+          .from('settings')
+          .upsert({
+            id: 1,
+            firecrawl_api_key: newSettings.firecrawlApiKey || null,
+            tinyfish_api_key: newSettings.tinyfishApiKey || null,
+            active_provider: newSettings.activeProvider,
+            preferred_categories: newSettings.preferredCategories.length > 0 ? newSettings.preferredCategories : null,
+            theme: newSettings.theme,
+            updated_at: new Date().toISOString(),
+          });
+        return true;
+      } catch {
         return false;
       }
-      return true;
     },
     [settings]
   );

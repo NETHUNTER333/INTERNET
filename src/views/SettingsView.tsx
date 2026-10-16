@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Key, Eye, EyeOff, Check, ExternalLink, Flame, Fish, Zap } from 'lucide-react';
+import { Settings as SettingsIcon, Eye, EyeOff, Check, ExternalLink, Flame, Fish, Zap, Moon, Sun, Layers, Globe } from 'lucide-react';
 import type { AppSettings, DeepReadProvider } from '@/hooks/useSettings';
-import { CATEGORY_LABELS, CATEGORY_COLORS, LANGUAGE_LABELS, LANGUAGE_FLAGS, ALL_LANGUAGES, ALL_CATEGORIES, NEWS_SOURCES_COUNT } from '@/data/sources';
-import { TOTAL_SUB_CATEGORIES } from '@/data/subCategories';
-// re-export for convenience
-void TOTAL_SUB_CATEGORIES;
+import { CATEGORY_LABELS, LANGUAGE_LABELS, LANGUAGE_FLAGS, ALL_LANGUAGES, ALL_CATEGORIES, NEWS_SOURCES_COUNT } from '@/data/sources';
 import type { Category } from '@/types';
 
 interface SettingsViewProps {
@@ -21,7 +18,6 @@ export function SettingsView({ settings, onUpdate }: SettingsViewProps) {
   const [showTfKey, setShowTfKey] = useState(false);
   const [savedFc, setSavedFc] = useState(false);
   const [savedTf, setSavedTf] = useState(false);
-  const [showBias, setShowBias] = useState(settings.showBiasRatings);
   const [selectedCats, setSelectedCats] = useState<string[]>(settings.preferredCategories);
   const [activeProvider, setActiveProvider] = useState<DeepReadProvider>(settings.activeProvider);
 
@@ -42,11 +38,6 @@ export function SettingsView({ settings, onUpdate }: SettingsViewProps) {
     await onUpdate({ activeProvider: provider });
   };
 
-  const handleToggleBias = async (value: boolean) => {
-    setShowBias(value);
-    await onUpdate({ showBiasRatings: value });
-  };
-
   const handleToggleCategory = async (cat: string) => {
     const newCats = selectedCats.includes(cat)
       ? selectedCats.filter((c) => c !== cat)
@@ -55,61 +46,128 @@ export function SettingsView({ settings, onUpdate }: SettingsViewProps) {
     await onUpdate({ preferredCategories: newCats });
   };
 
+  const handleThemeChange = async (theme: 'light' | 'dark') => {
+    await onUpdate({ theme });
+  };
+
   return (
-    <div className="flex flex-col gap-4 max-w-2xl mx-auto">
-      <div className="brutal-card bg-brutal-orange p-4">
-        <h2 className="font-display text-2xl flex items-center gap-2">
-          <SettingsIcon className="w-7 h-7" /> Settings
-        </h2>
-        <p className="text-sm font-mono">Configure your Ground Truth experience</p>
-      </div>
-
-      {/* Active Provider Selector */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
-        <h3 className="font-display text-lg flex items-center gap-2">
-          <Zap className="w-5 h-5" /> Active Deep Read Provider
-        </h3>
-        <p className="text-sm font-mono text-brutal-black/70">
-          Choose which service powers Deep Read and Find Related. TinyFish search and fetch are free.
-        </p>
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleProviderSwitch('tinyfish')}
-            className={`brutal-btn text-sm flex items-center gap-2 ${activeProvider === 'tinyfish' ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-white'}`}
-          >
-            <Fish className="w-4 h-4" /> TinyFish
-          </button>
-          <button
-            onClick={() => handleProviderSwitch('firecrawl')}
-            className={`brutal-btn text-sm flex items-center gap-2 ${activeProvider === 'firecrawl' ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-white'}`}
-          >
-            <Flame className="w-4 h-4" /> Firecrawl
-          </button>
+    <div className="flex flex-col gap-5 max-w-2xl mx-auto pb-8 font-sans">
+      {/* Header */}
+      <div className="brutal-card p-5 flex items-center justify-between bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-white text-slate-900 dark:bg-slate-900 dark:text-white border-2 border-slate-900 rounded-xl shadow-[2px_2px_0px_0px_#000]">
+            <SettingsIcon className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="font-sketch text-2xl font-black tracking-wider uppercase">
+              SETTINGS
+            </h2>
+            <p className="text-[11px] font-mono font-bold uppercase opacity-80">
+              Theme · Scraper Providers · Category Preferences
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* TinyFish API Key */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
+      {/* Theme Mode Card */}
+      <div className="brutal-card p-5 flex items-center justify-between gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-slate-100 dark:bg-slate-800 border-2 border-slate-900 dark:border-slate-100 rounded-xl">
+            {settings.theme === 'dark' ? <Moon className="w-5 h-5 text-indigo-400" /> : <Sun className="w-5 h-5 text-sky-500" />}
+          </div>
+          <div>
+            <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">THEME MODE</h3>
+            <p className="text-xs font-mono text-slate-600 dark:text-slate-400">Dark / Light Mode Toggle</p>
+          </div>
+        </div>
+
+        {/* Mode Toggle Buttons */}
         <div className="flex items-center gap-2">
-          <Fish className="w-5 h-5" />
-          <h3 className="font-display text-lg">TinyFish API Key</h3>
-          {activeProvider === 'tinyfish' && (
-            <span className="brutal-tag bg-brutal-lime text-xs flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Active
-            </span>
-          )}
+          <button
+            onClick={() => handleThemeChange('dark')}
+            title="Dark Mode"
+            aria-label="Dark Mode"
+            className={`brutal-btn p-3.5 !rounded-xl ${
+              settings.theme === 'dark'
+                ? '!bg-slate-900 !text-white dark:!bg-slate-100 dark:!text-slate-900 shadow-[3px_3px_0px_0px_#000]'
+                : 'bg-white dark:bg-slate-800 text-slate-500'
+            }`}
+          >
+            <Moon className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => handleThemeChange('light')}
+            title="Light Mode"
+            aria-label="Light Mode"
+            className={`brutal-btn p-3.5 !rounded-xl ${
+              settings.theme === 'light'
+                ? '!bg-slate-900 !text-white shadow-[3px_3px_0px_0px_#000]'
+                : 'bg-white dark:bg-slate-800 text-slate-500'
+            }`}
+          >
+            <Sun className="w-5 h-5" />
+          </button>
         </div>
-        <p className="text-sm font-mono text-brutal-black/70">
-          TinyFish powers Deep Read and Related Coverage search. Search and Fetch are free.
+      </div>
+
+      {/* Scraper Provider Selector */}
+      <div className="brutal-card p-5 flex flex-col gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-sky-500" />
+            <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">DEEP READ SCRAPER PROVIDER</h3>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleProviderSwitch('tinyfish')}
+              title="Select TinyFish Scraper"
+              className={`brutal-btn p-3 !rounded-xl flex items-center gap-2 ${
+                activeProvider === 'tinyfish'
+                  ? '!bg-slate-900 !text-white dark:!bg-slate-100 dark:!text-slate-900 shadow-[3px_3px_0px_0px_#000]'
+                  : 'bg-white dark:bg-slate-800 text-slate-500'
+              }`}
+            >
+              <Fish className="w-5 h-5" />
+              <span className="hidden sm:inline font-mono font-bold text-xs">TINYFISH</span>
+            </button>
+
+            <button
+              onClick={() => handleProviderSwitch('firecrawl')}
+              title="Select Firecrawl Scraper"
+              className={`brutal-btn p-3 !rounded-xl flex items-center gap-2 ${
+                activeProvider === 'firecrawl'
+                  ? '!bg-slate-900 !text-white dark:!bg-slate-100 dark:!text-slate-900 shadow-[3px_3px_0px_0px_#000]'
+                  : 'bg-white dark:bg-slate-800 text-slate-500'
+              }`}
+            >
+              <Flame className="w-5 h-5" />
+              <span className="hidden sm:inline font-mono font-bold text-xs">FIRECRAWL</span>
+            </button>
+          </div>
+        </div>
+        <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+          Backend Web Scraping Provider for Deep Reading & Citation Verification.
         </p>
-        <a
-          href="https://agent.tinyfish.ai/api-keys"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-bold text-brutal-blue flex items-center gap-1 hover:underline w-fit"
-        >
-          Get a TinyFish API key <ExternalLink className="w-3 h-3" />
-        </a>
+      </div>
+
+      {/* TinyFish API Key Card */}
+      <div className="brutal-card p-5 flex flex-col gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Fish className="w-5 h-5 text-teal-500" />
+            <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">TINYFISH API KEY</h3>
+          </div>
+          <a
+            href="https://agent.tinyfish.ai/api-keys"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Get TinyFish API Key"
+            className="brutal-btn p-2 !shadow-none"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
 
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -118,47 +176,43 @@ export function SettingsView({ settings, onUpdate }: SettingsViewProps) {
               placeholder="sk-tinyfish-..."
               value={tinyfishKey}
               onChange={(e) => setTinyfishKey(e.target.value)}
-              className="brutal-input w-full pr-10 text-sm"
+              className="brutal-input w-full pr-10 text-sm font-bold"
             />
             <button
               onClick={() => setShowTfKey(!showTfKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2"
+              title={showTfKey ? 'Hide Key' : 'Show Key'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 p-1"
             >
               {showTfKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <button onClick={handleSaveTfKey} className="brutal-btn bg-brutal-lime text-sm flex items-center gap-2">
-            {savedTf ? <Check className="w-4 h-4" /> : <Fish className="w-4 h-4" />}
-            {savedTf ? 'Saved!' : 'Save'}
+          <button
+            onClick={handleSaveTfKey}
+            title="Save TinyFish Key"
+            className="prisma-btn-primary p-3 flex items-center justify-center !rounded-xl"
+          >
+            {savedTf ? <Check className="w-5 h-5" /> : <Fish className="w-5 h-5" />}
           </button>
         </div>
-        <p className="text-xs font-mono text-brutal-black/50">
-          Your key is stored securely in the database and only sent to the server function.
-        </p>
       </div>
 
-      {/* Firecrawl API Key */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5" />
-          <h3 className="font-display text-lg">Firecrawl API Key</h3>
-          {activeProvider === 'firecrawl' && (
-            <span className="brutal-tag bg-brutal-lime text-xs flex items-center gap-1">
-              <Zap className="w-3 h-3" /> Active
-            </span>
-          )}
+      {/* Firecrawl API Key Card */}
+      <div className="brutal-card p-5 flex flex-col gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Flame className="w-5 h-5 text-rose-500" />
+            <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">FIRECRAWL API KEY</h3>
+          </div>
+          <a
+            href="https://www.firecrawl.dev/pricing"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Get Firecrawl API Key"
+            className="brutal-btn p-2 !shadow-none"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
-        <p className="text-sm font-mono text-brutal-black/70">
-          Firecrawl is an alternative for Deep Read and Related Coverage. The free tier gives you 500 searches or 1,000 page scrapes per month.
-        </p>
-        <a
-          href="https://www.firecrawl.dev/pricing"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm font-bold text-brutal-blue flex items-center gap-1 hover:underline w-fit"
-        >
-          Get a free Firecrawl API key <ExternalLink className="w-3 h-3" />
-        </a>
 
         <div className="flex gap-2">
           <div className="relative flex-1">
@@ -167,90 +221,69 @@ export function SettingsView({ settings, onUpdate }: SettingsViewProps) {
               placeholder="fc-..."
               value={firecrawlKey}
               onChange={(e) => setFirecrawlKey(e.target.value)}
-              className="brutal-input w-full pr-10 text-sm"
+              className="brutal-input w-full pr-10 text-sm font-bold"
             />
             <button
               onClick={() => setShowFcKey(!showFcKey)}
-              className="absolute right-3 top-1/2 -translate-y-1/2"
+              title={showFcKey ? 'Hide Key' : 'Show Key'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 p-1"
             >
               {showFcKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
-          <button onClick={handleSaveFcKey} className="brutal-btn bg-brutal-lime text-sm flex items-center gap-2">
-            {savedFc ? <Check className="w-4 h-4" /> : <Flame className="w-4 h-4" />}
-            {savedFc ? 'Saved!' : 'Save'}
-          </button>
-        </div>
-      </div>
-
-      {/* Bias Ratings */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
-        <h3 className="font-display text-lg">Bias Ratings</h3>
-        <p className="text-sm font-mono text-brutal-black/70">
-          Show political bias ratings on articles and coverage breakdown bars on stories.
-        </p>
-        <div className="flex gap-2">
           <button
-            onClick={() => handleToggleBias(true)}
-            className={`brutal-btn text-sm ${showBias ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-white'}`}
+            onClick={handleSaveFcKey}
+            title="Save Firecrawl Key"
+            className="prisma-btn-primary p-3 flex items-center justify-center !rounded-xl"
           >
-            Show
-          </button>
-          <button
-            onClick={() => handleToggleBias(false)}
-            className={`brutal-btn text-sm ${!showBias ? 'bg-brutal-black text-brutal-yellow' : 'bg-brutal-white'}`}
-          >
-            Hide
+            {savedFc ? <Check className="w-5 h-5" /> : <Flame className="w-5 h-5" />}
           </button>
         </div>
       </div>
 
       {/* Preferred Categories */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
-        <h3 className="font-display text-lg">Preferred Categories</h3>
-        <p className="text-sm font-mono text-brutal-black/70">
-          Select categories you want to prioritize in your feed.
-        </p>
+      <div className="brutal-card p-5 flex flex-col gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center gap-2">
+          <Layers className="w-5 h-5 text-sky-500" />
+          <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">PREFERRED CATEGORIES</h3>
+        </div>
         <div className="flex flex-wrap gap-2">
-          {ALL_CATEGORIES_LOCAL.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => handleToggleCategory(cat)}
-              className={`brutal-tag ${
-                selectedCats.includes(cat) ? `${CATEGORY_COLORS[cat]} ring-2 ring-brutal-black ring-offset-1` : 'bg-brutal-white'
-              }`}
-            >
-              {CATEGORY_LABELS[cat]}
-            </button>
-          ))}
+          {ALL_CATEGORIES_LOCAL.map((cat) => {
+            const isSelected = selectedCats.includes(cat);
+            return (
+              <button
+                key={cat}
+                onClick={() => handleToggleCategory(cat)}
+                className={`brutal-btn text-xs font-extrabold uppercase ${
+                  isSelected
+                    ? '!bg-slate-900 !text-white dark:!bg-slate-100 dark:!text-slate-900'
+                    : 'bg-white dark:bg-slate-800'
+                }`}
+              >
+                {CATEGORY_LABELS[cat]}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Languages */}
-      <div className="brutal-card bg-brutal-white p-6 flex flex-col gap-4">
-        <h3 className="font-display text-lg">Languages & Countries</h3>
-        <p className="text-sm font-mono text-brutal-black/70">
-          Ground Truth now aggregates news from {ALL_LANGUAGES.length} languages across {NEWS_SOURCES_COUNT}+ sources worldwide.
-          Use the language filter on the feed page to narrow your view.
+      {/* Languages & Sources */}
+      <div className="brutal-card p-5 flex flex-col gap-3 shadow-[4px_4px_0px_0px_#000]">
+        <div className="flex items-center gap-2">
+          <Globe className="w-5 h-5 text-indigo-400" />
+          <h3 className="font-extrabold text-sm uppercase text-slate-900 dark:text-slate-100">MULTILINGUAL SOURCES</h3>
+        </div>
+        <p className="text-xs font-mono text-slate-600 dark:text-slate-400">
+          Aggregating {NEWS_SOURCES_COUNT}+ sources across {ALL_LANGUAGES.length} languages worldwide.
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {ALL_LANGUAGES.map((lang) => (
-            <span key={lang} className="brutal-tag bg-brutal-cyan/30 text-xs">
+            <span key={lang} className="brutal-tag bg-slate-100 dark:bg-slate-800">
               {LANGUAGE_FLAGS[lang]} {LANGUAGE_LABELS[lang]}
             </span>
           ))}
         </div>
       </div>
-
-      <div className="brutal-card bg-brutal-black p-4">
-        <h3 className="font-display text-lg text-brutal-yellow mb-2">About Ground Truth</h3>
-        <p className="text-sm font-mono text-brutal-white/80">
-          Ground Truth aggregates news from {ALL_CATEGORIES_LOCAL.length} categories across {NEWS_SOURCES_COUNT}+ sources in {ALL_LANGUAGES.length} languages using free RSS feeds.
-          Stories are grouped by topic, tagged with bias ratings, and analyzed for coverage blind spots.
-          TinyFish (free) or Firecrawl integration provides deep article reading and related coverage discovery.
-        </p>
-      </div>
     </div>
   );
 }
-

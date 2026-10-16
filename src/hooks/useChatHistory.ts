@@ -10,7 +10,7 @@ export interface ChatHistoryMessage {
   created_at?: string;
 }
 
-const SESSION_ID = `alberto-session`;
+const SESSION_ID = `zeno-session`;
 
 export function useChatHistory() {
   const [messages, setMessages] = useState<ChatHistoryMessage[]>([]);
@@ -23,13 +23,13 @@ export function useChatHistory() {
         .from('chat_history')
         .select('*')
         .order('created_at', { ascending: true })
-        .limit(50);
+        .limit(100);
 
-      if (error) {
+      if (error || !data) {
         setMessages([]);
         return;
       }
-      setMessages((data || []) as ChatHistoryMessage[]);
+      setMessages(data as ChatHistoryMessage[]);
     } catch {
       setMessages([]);
     } finally {
@@ -38,34 +38,37 @@ export function useChatHistory() {
   }, []);
 
   const saveMessage = useCallback(async (role: 'user' | 'assistant', content: string, toolLogs?: string[]) => {
-    try {
-      const { data, error } = await supabase
-        .from('chat_history')
-        .insert({
-          session_id: SESSION_ID,
-          role,
-          content,
-          tool_logs: toolLogs || null,
-        })
-        .select()
-        .single();
+    const newMsg: ChatHistoryMessage = {
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+      session_id: SESSION_ID,
+      role,
+      content,
+      tool_logs: toolLogs && toolLogs.length > 0 ? toolLogs : undefined,
+      created_at: new Date().toISOString(),
+    };
 
-      if (error) return;
-      if (data) {
-        setMessages((prev) => [...prev, data as ChatHistoryMessage]);
-      }
-    } catch {
-      // silently fail - chat still works without persistence
+    // Instant local state update for zero lag!
+    setMessages((prev) => [...prev, newMsg]);
+
+    try {
+      await supabase.from('chat_history').insert({
+        session_id: SESSION_ID,
+        role,
+        content,
+        tool_logs: toolLogs || null,
+      });
+    } catch (err) {
+      console.warn('Chat history persistence error:', err);
     }
   }, []);
 
   const clearHistory = useCallback(async () => {
+    setMessages([]);
     try {
       await supabase.from('chat_history').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     } catch {
-      // silently fail
+      // silently handle
     }
-    setMessages([]);
   }, []);
 
   useEffect(() => {

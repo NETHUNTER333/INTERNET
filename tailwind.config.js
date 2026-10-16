@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -52,16 +53,22 @@ export default {
         },
       },
       fontFamily: {
+        sketch: ['"Bungee"', '"Rubik Mono One"', '"Fredoka"', 'cursive', 'sans-serif'],
+        cartoon: ['"Fredoka"', '"Bungee"', 'sans-serif'],
         display: ['"Space Grotesk"', '"Inter"', 'system-ui', 'sans-serif'],
         sans: ['"Inter"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', '"Courier New"', 'monospace'],
       },
       borderRadius: {
+        'xs': '4px',
+        '2xs': '2px',
         'xl': '12px',
         '2xl': '16px',
         '3xl': '24px',
       },
       boxShadow: {
+        'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+        '2xs': '0 1px 1px 0 rgba(0, 0, 0, 0.02)',
         'sm': '0 1px 2px 0 rgba(0,0,0,0.05)',
         'card': '0 1px 3px 0 rgba(0,0,0,0.08), 0 1px 2px -1px rgba(0,0,0,0.05)',
         'card-hover': '0 4px 12px 0 rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05)',

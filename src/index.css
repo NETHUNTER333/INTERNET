@@ -1,18 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@600;700&family=Rubik+Mono+One&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-prisma-bg text-prisma-text font-sans;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  * {
+    -webkit-tap-highlight-color: transparent;
   }
 
-  ::selection {
-    @apply bg-prisma-accentLight text-prisma-text;
+  body {
+    @apply bg-[#F8FAFC] dark:bg-[#0A0D14] text-slate-900 dark:text-slate-100 font-sans min-h-screen selection:bg-slate-900 selection:text-white dark:selection:bg-slate-100 dark:selection:text-slate-900;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   ::-webkit-scrollbar {
@@ -25,72 +26,56 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-prisma-borderStrong rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-prisma-textMuted;
+    @apply bg-slate-900 dark:bg-slate-100 rounded-none border border-white dark:border-slate-900;
   }
 }
 
-@layer components {
-  .brutal-card {
-    @apply bg-prisma-surface border border-prisma-border rounded-xl shadow-card transition-all duration-200;
-  }
+.font-sketch {
+  font-family: 'Bungee', 'Rubik Mono One', 'Fredoka', cursive, sans-serif;
+}
 
-  .brutal-card:hover {
-    @apply shadow-card-hover;
+@layer components {
+  /* High-Contrast Neo-Brutalist Components */
+  .brutal-card {
+    @apply bg-white dark:bg-slate-900 border-3 border-slate-900 dark:border-slate-100 rounded-2xl shadow-[4px_4px_0px_0px_#000] dark:shadow-[4px_4px_0px_0px_#FFF] overflow-hidden;
+    will-change: transform;
   }
 
   .brutal-btn {
-    @apply bg-prisma-surface border border-prisma-borderStrong rounded-lg px-4 py-2 font-semibold text-sm text-prisma-text transition-all duration-150 hover:bg-prisma-surfaceAlt active:scale-[0.98];
-  }
-
-  .brutal-btn:hover {
-    @apply shadow-card-hover;
+    @apply bg-white dark:bg-slate-800 border-2.5 border-slate-900 dark:border-slate-100 rounded-xl px-4 py-2 font-bold text-xs uppercase tracking-wide text-slate-900 dark:text-slate-100 shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFF] transition-all duration-75 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none cursor-pointer;
   }
 
   .brutal-tag {
-    @apply inline-flex items-center rounded-md border border-prisma-border px-2 py-0.5 text-xs font-medium text-prisma-textSecondary transition-colors;
+    @apply inline-flex items-center rounded-lg border-2 border-slate-900 dark:border-slate-100 px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase text-slate-900 dark:text-slate-100;
   }
 
   .brutal-input {
-    @apply bg-prisma-surface border border-prisma-borderStrong rounded-lg px-3.5 py-2.5 text-sm font-sans text-prisma-text outline-none transition-all duration-150 placeholder:text-prisma-textMuted focus:border-prisma-accent focus:ring-2 focus:ring-prisma-accentLight;
+    @apply bg-white dark:bg-slate-900 border-2.5 border-slate-900 dark:border-slate-100 rounded-xl px-4 py-2.5 text-sm font-sans font-bold text-slate-900 dark:text-slate-100 outline-none placeholder:text-slate-400 focus:ring-0 focus:border-slate-900 dark:focus:border-slate-100 shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFF];
   }
 
   .prisma-btn-primary {
-    @apply bg-prisma-accent text-white rounded-lg px-4 py-2 font-semibold text-sm transition-all duration-150 hover:bg-prisma-accentHover active:scale-[0.98] disabled:opacity-50;
+    @apply bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-extrabold border-2.5 border-slate-900 dark:border-slate-100 rounded-xl px-5 py-2.5 text-xs uppercase tracking-wider shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFF] transition-all duration-75 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none disabled:opacity-50 cursor-pointer;
   }
 
-  .prisma-btn-ghost {
-    @apply rounded-lg p-2 text-prisma-textSecondary transition-all duration-150 hover:bg-prisma-surfaceAlt hover:text-prisma-text;
-  }
-
-  .prisma-card {
-    @apply bg-prisma-surface border border-prisma-border rounded-xl shadow-card transition-all duration-200 hover:shadow-card-hover;
-  }
-
-  .prisma-chip {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all duration-150;
+  .prisma-btn-secondary {
+    @apply bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold border-2.5 border-slate-900 dark:border-slate-100 rounded-xl px-4 py-2 text-xs uppercase shadow-[3px_3px_0px_0px_#000] dark:shadow-[3px_3px_0px_0px_#FFF] transition-all duration-75 hover:-translate-x-0.5 hover:-translate-y-0.5 active:translate-x-0 active:translate-y-0 active:shadow-none cursor-pointer;
   }
 }
 
 @layer utilities {
-  .text-stroke {
-    -webkit-text-stroke: 2px #0A0A0A;
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .border-2\.5 {
+    border-width: 2.5px;
   }
 
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .border-3 {
+    border-width: 3px;
   }
 }

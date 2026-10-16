@@ -101,6 +101,14 @@ export interface ArxivPaper {
   categories: string;
 }
 
+export interface XPost {
+  title: string;
+  author: string;
+  url: string;
+  snippet: string;
+  publishedAt: string;
+}
+
 export interface AgentResearchResult {
   query: string;
   reddit: {
@@ -131,6 +139,7 @@ export interface AgentResearchResult {
     source: string;
     publishedAt: string;
   }[];
+  twitter?: XPost[];
 }
 
 export interface AthleteSocial {
@@ -141,4 +150,75 @@ export interface AthleteSocial {
   category: Category;
 }
 
-export type ViewName = 'feed' | 'article' | 'github' | 'settings' | 'bookmarks' | 'videos' | 'arxiv' | 'research' | 'pdf-reader';
+export type ViewName = 'chat' | 'feed' | 'article' | 'github' | 'settings' | 'bookmarks' | 'videos' | 'arxiv' | 'research' | 'pdf-reader';
+
+// Distill Knowledge System Entities
+export type AgentRole = 'alberto' | 'neo' | 'radar' | 'media';
+export type EngagementMode = 'invoked' | 'relevant' | 'engaged';
+
+export interface VaultEntry {
+  id: string;
+  threadId?: string;
+  projectId?: string;
+  type: 'thought' | 'decision' | 'observation' | 'url' | 'media' | 'action';
+  content: string;
+  monthKey: string; // e.g. "2026-12"
+  createdAt: string;
+  updatedAt?: string;
+  sourceUrl?: string;
+}
+
+export interface SourceRecord {
+  id: string;
+  url: string;
+  title: string;
+  type: 'arxiv' | 'github' | 'youtube' | 'news' | 'web';
+  retrievedAt: string;
+  rawSnippet?: string;
+  fullText?: string;
+  authorOrChannel?: string;
+}
+
+export interface ExtractedClaim {
+  id: string;
+  sourceId: string;
+  verbatimQuote: string;
+  claimText: string;
+  confidenceScore: number; // 0.0 to 1.0
+  createdAt: string;
+}
+
+export interface DurableMemory {
+  id: string;
+  category: 'preference' | 'constraint' | 'decision' | 'fact';
+  content: string;
+  sourceClaimId?: string;
+  status: 'proposed' | 'approved' | 'deprecated';
+  createdAt: string;
+  userApprovedAt?: string;
+}
+
+export interface PlannerActionItem {
+  id: string;
+  title: string;
+  dueAt?: string;
+  timezone?: string;
+  recurrenceRule?: 'NONE' | 'FREQ=DAILY' | 'FREQ=WEEKLY' | 'FREQ=MONTHLY';
+  reminderAt?: string;
+  status: 'pending' | 'completed' | 'missed';
+  completedAt?: string;
+  sourceEntryId?: string;
+  sourceThreadId?: string;
+  createdAt: string;
+}
+
+export interface WeeklyDistill {
+  id: string;
+  weekLabel: string;
+  summary: string;
+  keyThemes: string[];
+  actionItems: string[];
+  sourcesAnalyzed: number;
+  createdAt: string;
+}
+

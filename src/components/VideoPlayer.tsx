@@ -1,6 +1,5 @@
 import { X, ExternalLink, Bookmark, BookmarkCheck, Clock } from 'lucide-react';
 import type { NewsVideo } from '@/types';
-import { BiasTag } from './BiasTag';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '@/data/sources';
 import { formatTimeAgo } from '@/lib/news';
 import { useEffect } from 'react';
@@ -10,7 +9,7 @@ interface VideoPlayerProps {
   onClose: () => void;
   isBookmarked: boolean;
   onToggleBookmark: (video: NewsVideo) => void;
-  showBias: boolean;
+  showBias?: boolean;
 }
 
 export function VideoPlayer({
@@ -18,7 +17,6 @@ export function VideoPlayer({
   onClose,
   isBookmarked,
   onToggleBookmark,
-  showBias,
 }: VideoPlayerProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -47,7 +45,6 @@ export function VideoPlayer({
               {CATEGORY_LABELS[video.category]}
             </span>
             <span className="font-bold text-sm">{video.channelName}</span>
-            {showBias && <BiasTag bias={video.channelBias} size="md" />}
           </div>
           <button onClick={onClose} className="brutal-btn bg-brutal-red text-brutal-white !p-2">
             <X className="w-5 h-5" />

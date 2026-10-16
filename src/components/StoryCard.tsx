@@ -1,7 +1,5 @@
-import { AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Layers, ChevronRight } from 'lucide-react';
 import type { Story, Article } from '@/types';
-import { BiasTag } from './BiasTag';
-import { CoverageBar } from './CoverageBar';
 import { CATEGORY_COLORS, CATEGORY_LABELS } from '@/data/sources';
 import { formatTimeAgo } from '@/lib/news';
 
@@ -11,7 +9,7 @@ interface StoryCardProps {
   onOpenStory: (story: Story) => void;
   isBookmarked: (link: string) => boolean;
   onToggleBookmark: (article: Article) => void;
-  showBias: boolean;
+  showBias?: boolean;
 }
 
 export function StoryCard({
@@ -20,91 +18,98 @@ export function StoryCard({
   onOpenStory,
   isBookmarked,
   onToggleBookmark,
-  showBias,
 }: StoryCardProps) {
+  const badgeStyle = CATEGORY_COLORS[story.category] || 'bg-slate-100 text-slate-700 border-slate-200';
+
   return (
-    <div className="brutal-card flex flex-col overflow-hidden">
+    <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm hover:shadow-md hover:border-slate-300/90 transition-all duration-200 overflow-hidden flex flex-col group">
+      {/* Thumbnail Banner */}
       {story.thumbnail && (
-        <div className={`border-b-4 border-brutal-black ${CATEGORY_COLORS[story.category]} p-1`}>
+        <div className="relative h-44 overflow-hidden bg-slate-100 border-b border-slate-100">
           <img
             src={story.thumbnail}
             alt=""
-            className="w-full h-48 object-cover border-2 border-brutal-black"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             loading="lazy"
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
             }}
           />
+          <div className="absolute top-3 left-3 flex items-center gap-2 flex-wrap">
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeStyle}`}>
+              {CATEGORY_LABELS[story.category]}
+            </span>
+          </div>
         </div>
       )}
 
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className={`${CATEGORY_COLORS[story.category]} brutal-tag`}>
-            {CATEGORY_LABELS[story.category]}
-          </span>
-          <span className="brutal-tag bg-brutal-white">
-            {story.totalSources} {story.totalSources === 1 ? 'Source' : 'Sources'}
-          </span>
-          {story.isBlindSpot && (
-            <span className="brutal-tag bg-brutal-red text-brutal-white flex items-center gap-1">
-              <AlertTriangle className="w-3 h-3" />
-              {story.blindSpotSide === 'right' ? 'Right Blind Spot' : 'Left Blind Spot'}
+      <div className="p-5 flex flex-col gap-3 flex-1">
+        {/* Header Metadata (if no thumbnail) */}
+        {!story.thumbnail && (
+          <div className="flex items-center justify-between gap-2">
+            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeStyle}`}>
+              {CATEGORY_LABELS[story.category]}
             </span>
-          )}
-        </div>
+            <span className="text-xs font-medium text-slate-400">
+              {formatTimeAgo(story.publishedAt)}
+            </span>
+          </div>
+        )}
 
+        {/* Story Title */}
         <h2
-          className="font-display text-lg leading-tight cursor-pointer hover:underline"
+          className="font-display text-base font-bold leading-snug text-slate-900 group-hover:text-teal-600 transition-colors cursor-pointer line-clamp-2"
           onClick={() => onOpenStory(story)}
         >
           {story.title}
         </h2>
 
-        {showBias && (
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-bold uppercase">Coverage</span>
-              <span className="text-xs font-mono text-brutal-black/60">{formatTimeAgo(story.publishedAt)}</span>
-            </div>
-            <CoverageBar coverage={story.coverage} totalSources={story.totalSources} />
+        {/* Sources Coverage Header */}
+        <div className="flex items-center justify-between gap-2 mt-auto pt-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <Layers className="w-3.5 h-3.5 text-teal-600" />
+            <span>{story.totalSources} {story.totalSources === 1 ? 'Source' : 'Sources'}</span>
           </div>
-        )}
+          {story.thumbnail && (
+            <span className="text-xs font-medium text-slate-400">
+              {formatTimeAgo(story.publishedAt)}
+            </span>
+          )}
+        </div>
 
-        <div className="flex flex-col gap-1.5 mt-1">
-          <span className="text-xs font-bold uppercase text-brutal-black/60">Sources covering this:</span>
-          {story.articles.slice(0, 4).map((article) => (
+        {/* Source List */}
+        <div className="flex flex-col gap-2 pt-1">
+          {story.articles.slice(0, 3).map((article) => (
             <div
               key={article.id}
-              className="flex items-center justify-between gap-2 border-2 border-brutal-black/30 p-1.5 hover:border-brutal-black hover:bg-brutal-yellow/20 transition-all cursor-pointer"
+              className="flex items-center justify-between gap-2 border border-slate-200/70 bg-slate-50/60 hover:bg-teal-50/40 hover:border-teal-200 p-2.5 rounded-xl transition-all cursor-pointer"
               onClick={() => onOpenArticle(article)}
             >
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="text-xs font-bold truncate">{article.sourceName}</span>
-                {showBias && <BiasTag bias={article.sourceBias} />}
-              </div>
+              <span className="text-xs font-semibold text-slate-800 truncate">{article.sourceName}</span>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onToggleBookmark(article);
                 }}
-                className="shrink-0"
+                className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-400 hover:text-teal-600 transition-colors shrink-0 ml-auto"
                 aria-label="Toggle bookmark"
               >
                 {isBookmarked(article.link) ? (
-                  <EyeOff className="w-4 h-4 text-brutal-black/40" />
+                  <EyeOff className="w-3.5 h-3.5 text-teal-600" />
                 ) : (
-                  <Eye className="w-4 h-4 text-brutal-black/60" />
+                  <Eye className="w-3.5 h-3.5" />
                 )}
               </button>
             </div>
           ))}
-          {story.articles.length > 4 && (
+
+          {story.articles.length > 3 && (
             <button
               onClick={() => onOpenStory(story)}
-              className="text-xs font-bold uppercase text-brutal-blue hover:underline text-left"
+              className="text-xs font-semibold text-teal-600 hover:text-teal-700 flex items-center gap-1 mt-1 hover:underline text-left w-fit"
             >
-              +{story.articles.length - 4} more sources
+              <span>+{story.articles.length - 3} more sources</span>
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

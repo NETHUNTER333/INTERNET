@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react';
-import { Menu, Zap, MessageCircle } from 'lucide-react';
+import { Menu, Zap } from 'lucide-react';
 import type { ViewName, Category, Article, Story, NewsVideo } from '@/types';
 import type { ArxivPaperRich } from '@/lib/arxiv';
 import { Sidebar } from '@/components/Sidebar';
+import { AlbertoView } from '@/views/AlbertoView';
 import { FeedView } from '@/views/FeedView';
 import { ArticleView } from '@/views/ArticleView';
 import { GitHubView } from '@/views/GitHubView';
@@ -13,22 +14,20 @@ import { ArxivView } from '@/views/ArxivView';
 import { PdfReaderView } from '@/views/PdfReaderView';
 import { ResearchView } from '@/views/ResearchView';
 import { VideoPlayer } from '@/components/VideoPlayer';
-import { AlbertoChat } from '@/components/AlbertoChat';
 import { useBookmarks } from '@/hooks/useBookmarks';
 import { useSettings } from '@/hooks/useSettings';
 
 function App() {
-  const [currentView, setCurrentView] = useState<ViewName>('feed');
+  const [currentView, setCurrentView] = useState<ViewName>('chat');
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const [activeStory, setActiveStory] = useState<Story | null>(null);
   const [playingVideo, setPlayingVideo] = useState<NewsVideo | null>(null);
-  const [chatOpen, setChatOpen] = useState(false);
   const [activePdfPaper, setActivePdfPaper] = useState<ArxivPaperRich | null>(null);
 
-  const { bookmarks, loading: bookmarksLoading, isBookmarked, toggleBookmark, removeBookmark } = useBookmarks();
+  const { bookmarks, loading: _bookmarksLoading, isBookmarked, toggleBookmark, removeBookmark } = useBookmarks();
   const { settings, updateSettings } = useSettings();
 
   const handleOpenArticle = useCallback((article: Article) => {
@@ -108,12 +107,10 @@ function App() {
   );
 
   return (
-    <div className="flex min-h-screen bg-prisma-bg">
+    <div className="flex min-h-screen bg-[#F8FAFC] dark:bg-[#0A0D14] text-slate-900 dark:text-slate-100 transition-colors">
       <Sidebar
         currentView={currentView}
         onViewChange={handleViewChange}
-        selectedCategory={selectedCategory}
-        onCategoryChange={setSelectedCategory}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onSearchSubmit={handleSearchSubmit}
@@ -122,32 +119,52 @@ function App() {
         onClose={() => setSidebarOpen(false)}
       />
 
-      <main className="flex-1 min-w-0">
-        <div className="md:hidden bg-prisma-surface border-b border-prisma-border p-3 flex items-center gap-3 sticky top-0 z-30">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="prisma-btn-ghost !p-2"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-gradient-to-br from-zeno-coral via-zeno-mint to-zeno-sky rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" fill="white" />
+      <main className="flex-1 min-w-0 flex flex-col">
+        {/* Mobile Header Bar */}
+        <div className="md:hidden bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-b-3 border-slate-900 dark:border-slate-100 p-3.5 flex items-center justify-between sticky top-0 z-30 shadow-[0_3px_0px_0px_#000]">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-1.5 brutal-btn !p-1.5 !bg-white !text-slate-900"
+              aria-label="Open Menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-white text-slate-900 dark:bg-slate-900 dark:text-white border border-slate-900 rounded-lg flex items-center justify-center">
+                <Zap className="w-4 h-4 fill-current" />
+              </div>
+              <span className="font-sketch font-black text-xl uppercase tracking-wider">
+                ZENO
+              </span>
             </div>
-            <span className="font-display text-lg tracking-tight">Zeno</span>
           </div>
         </div>
 
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="p-3 sm:p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
+          {currentView === 'chat' && (
+            <AlbertoView
+              context={{
+                currentView,
+                articleTitle: activeArticle?.title,
+                articleSummary: activeArticle?.summary,
+                articleSource: activeArticle?.sourceName,
+                paperTitle: activePdfPaper?.title,
+                paperAbstract: activePdfPaper?.summary,
+                paperArxivId: activePdfPaper?.arxivId,
+              }}
+            />
+          )}
+
           {currentView === 'feed' && (
             <FeedView
               selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
               searchQuery={searchQuery}
               onOpenArticle={handleOpenArticle}
               onOpenStory={handleOpenStory}
               isBookmarked={isBookmarked}
               onToggleBookmark={toggleBookmark}
-              showBias={settings.showBiasRatings}
             />
           )}
 
@@ -155,7 +172,6 @@ function App() {
             <VideosView
               selectedCategory={selectedCategory}
               onCategoryChange={setSelectedCategory}
-              showBias={settings.showBiasRatings}
               onPlayVideo={handlePlayVideo}
             />
           )}
@@ -175,7 +191,6 @@ function App() {
               firecrawlApiKey={settings.firecrawlApiKey}
               tinyfishApiKey={settings.tinyfishApiKey}
               activeProvider={settings.activeProvider}
-              showBias={settings.showBiasRatings}
             />
           )}
 
@@ -191,7 +206,7 @@ function App() {
           {currentView === 'bookmarks' && (
             <BookmarksView
               bookmarks={bookmarks}
-              loading={bookmarksLoading}
+              loading={_bookmarksLoading}
               onRemove={removeBookmark}
             />
           )}
@@ -205,39 +220,12 @@ function App() {
         </div>
       </main>
 
-      {/* Alberto Chat FAB */}
-      {!chatOpen && (
-        <button
-          onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-prisma-accent text-white rounded-full shadow-lg hover:scale-105 active:scale-95 transition-transform flex items-center justify-center"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </button>
-      )}
-
-      {chatOpen && (
-        <AlbertoChat
-          isOpen={chatOpen}
-          onClose={() => setChatOpen(false)}
-          context={{
-            currentView,
-            articleTitle: activeArticle?.title,
-            articleSummary: activeArticle?.summary,
-            articleSource: activeArticle?.sourceName,
-            paperTitle: activePdfPaper?.title,
-            paperAbstract: activePdfPaper?.summary,
-            paperArxivId: activePdfPaper?.arxivId,
-          }}
-        />
-      )}
-
       {playingVideo && (
         <VideoPlayer
           video={playingVideo}
           onClose={handleCloseVideo}
           isBookmarked={isVideoBookmarked(playingVideo.watchUrl)}
           onToggleBookmark={handleToggleVideoBookmark}
-          showBias={settings.showBiasRatings}
         />
       )}
     </div>
