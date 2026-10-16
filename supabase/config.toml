@@ -1,0 +1,11 @@
+[functions.rss-feed]
+verify_jwt = false
+
+[functions.firecrawl-proxy]
+verify_jwt = false
+
+[functions.agent-research]
+verify_jwt = false
+
+[functions.alberto-chat]
+verify_jwt = false
